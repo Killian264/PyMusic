@@ -4,11 +4,14 @@ from PyQt5.QtMultimedia import *
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
-import sys
-import json
 import shutil
 configLoc = "./config.json"
 from ConfigFunctions import *
+import MusicClass
+from os.path import isfile, join
+from os import *
+import sys
+from PyQt5.QtGui import QColor, QBrush
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -18,7 +21,7 @@ class MainWindow(QMainWindow):
         self.getSettings()
 
         # setup play state
-        self.playState = 0 # 0 is paused 1 is playing
+        self.isPlaying = False # 0 is paused 1 is playing
         # gets the playlist of songs from folder see func
         self.getPlaylist()
         # player stuff
@@ -33,7 +36,11 @@ class MainWindow(QMainWindow):
         # very important
         self.changeSpeakerImg()
 
+        self.model = QtGui.QStandardItemModel()
+        self.songView.setModel(self.model)
 
+
+        self.getMusicList()
         # thingies
         # songView
         # previous button
@@ -52,10 +59,32 @@ class MainWindow(QMainWindow):
     # this will be changed out later for a more robust loader of multiple songs
     def getPlaylist(self):
         self.playlist = QMediaPlaylist()
-        url = QtCore.QUrl.fromLocalFile("./Music/TestSong.wav")
-        self.playlist.addMedia(QMediaContent(url))
-        self.playlist.setPlaybackMode(QMediaPlaylist.Loop)
-        print(self.playlist.mediaCount())
+
+    def addSongToView(self, songName):
+        songStandardItem = QtGui.QStandardItem(songName.split('.')[0])
+        songStandardItem.setEditable(False)
+        color = QColor(20, 20, 20, 130)
+        #color = QColor(100, 100, 100, 130)
+        brush = QBrush()
+        brush.setColor(color)
+        brush.setStyle(1)
+        songStandardItem.setBackground(brush)
+        #color = QColor("white")
+        #brush = QBrush()
+        #brush.setColor(color)
+        #brush.setStyle(1)
+        #songStandardItem.setForeground(brush)
+        self.model.appendRow(songStandardItem)
+
+    # build out and allow for dirs I could use recursion to make this possible
+    def getMusicList(self):
+        # this makes a list, gets all files in directory, then makes class with item and adds to list and to fileview
+        self.musicList = []
+        onlyfiles = [f for f in listdir(self.musicLoc) if isfile(join(self.musicLoc, f))]
+        for music in onlyfiles:
+            musicClass = MusicClass.Song(self.musicLoc, music)
+            self.musicList.append(musicClass)
+            self.addSongToView(music)
 
 
     def setupUi(self):
@@ -86,6 +115,7 @@ class MainWindow(QMainWindow):
         # song view
         self.songView = QtWidgets.QListView(self.centralwidget)
         self.songView.setObjectName("songView")
+        self.songView.setStyleSheet("color: white;")
         self.verticalLayout.addWidget(self.songView)
 
         # previous button
@@ -227,13 +257,13 @@ class MainWindow(QMainWindow):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("MainWindow", "PyMusic"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
-        self.fileMenuOpen.setText(_translate("MainWindow", "Open"))
+        self.fileMenuOpen.setText(_translate("MainWindow", "Open Music File"))
         self.changeDefaultFolder.setText(_translate("MainWindow", "Change Music Folder"))
 
     # basically event listeners for changes
     def connects(self):
         self.previous.clicked.connect(self.prevSong)
-        self.play.clicked.connect(self.playSong)
+        self.play.clicked.connect(self.changeSongState)
         self.forward.clicked.connect(self.nextSong)
         self.audioSlider.valueChanged.connect(self.changeAudioVolume)
         self.songSlider.sliderMoved.connect(self.changeSongPosition)
@@ -242,6 +272,7 @@ class MainWindow(QMainWindow):
 
         self.fileMenuOpen.triggered.connect(self.getFile)
         self.changeDefaultFolder.triggered.connect(self.getDirectory)
+        self.songView.doubleClicked.connect(self.playSongAtIndex)
 
 
     # File Thingies
@@ -251,6 +282,11 @@ class MainWindow(QMainWindow):
         currentLoc, typeOrSomething = fileInfo
         if not currentLoc == '':
             shutil.move(currentLoc, self.musicLoc)
+
+        fileName = currentLoc.split('/')[-1]
+        musicClass = MusicClass.Song(self.musicLoc, fileName)
+        self.musicList.append(musicClass)
+        self.addSongToView(fileName)
 
     def getDirectory(self):
         # open dialog, check if user has file, move file to music Folder
@@ -272,6 +308,7 @@ class MainWindow(QMainWindow):
         self.volume = self.audioSlider.value()
         self.player.setVolume(self.volume)
         self.changeSpeakerImg()
+        updateConfig(self.volume, self.musicLoc, configLoc)
 
     # changes speaker image based on volume
     def changeSpeakerImg(self):
@@ -292,21 +329,37 @@ class MainWindow(QMainWindow):
     def nextSong(self):
         print("play next")
 
+    def playSongAtIndex(self, index):
+        # get music list, get MusicClass at row clicked, return MediaContentClass of that index
+        song = self.musicList[index.row()].returnMediaContent()
+        # remove song and add new song then play
+        pos = self.playlist.currentIndex()
+        self.playlist.removeMedia(pos)
+        self.playlist.insertMedia(pos, song)
+        self.playSong()
+
+
     # checks song state and changes it
-    def playSong(self):
+    def changeSongState(self):
         # stop may be added later
-        if self.playState == 0:
-            self.player.play()
-            self.playState = 1
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(":/icons/pause.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.play.setIcon(icon)
-        elif self.playState == 1:
-            self.player.pause()
-            self.playState = 0
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(":/icons/Play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.play.setIcon(icon)
+        if not self.isPlaying:
+            self.playSong()
+        elif self.isPlaying:
+            self.pauseSong()
+
+    def playSong(self):
+        self.player.play()
+        self.isPlaying = True
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/icons/pause.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.play.setIcon(icon)
+
+    def pauseSong(self):
+        self.player.pause()
+        self.isPlaying = False
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/icons/Play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.play.setIcon(icon)
 
 # does stuff
 if __name__ == "__main__":

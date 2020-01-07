@@ -1,7 +1,7 @@
 import json
 
 configLoc = "./config.json"
-baseMusicLoc = "./Music/"
+baseMusicLoc = "./Music"
 
 # this could be changed out later to some kind of object or have an object passed after which it would be converted and written to file
 def updateConfig(volume, musicFolder, configLoc=configLoc):
