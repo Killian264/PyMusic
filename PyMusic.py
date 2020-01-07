@@ -22,6 +22,7 @@ class MainWindow(QMainWindow):
 
         # setup play state
         self.isPlaying = False # 0 is paused 1 is playing
+        self.currentSong = 0
         # gets the playlist of songs from folder see func
         self.getPlaylist()
         # player stuff
@@ -63,17 +64,11 @@ class MainWindow(QMainWindow):
     def addSongToView(self, songName):
         songStandardItem = QtGui.QStandardItem(songName.split('.')[0])
         songStandardItem.setEditable(False)
-        color = QColor(20, 20, 20, 130)
-        #color = QColor(100, 100, 100, 130)
+        color = (QColor(20, 20, 20, 130), QColor(36, 36, 36, 130))[not len(self.musicList) % 2]
         brush = QBrush()
         brush.setColor(color)
         brush.setStyle(1)
         songStandardItem.setBackground(brush)
-        #color = QColor("white")
-        #brush = QBrush()
-        #brush.setColor(color)
-        #brush.setStyle(1)
-        #songStandardItem.setForeground(brush)
         self.model.appendRow(songStandardItem)
 
     # build out and allow for dirs I could use recursion to make this possible
@@ -81,7 +76,7 @@ class MainWindow(QMainWindow):
         # this makes a list, gets all files in directory, then makes class with item and adds to list and to fileview
         self.musicList = []
         onlyfiles = [f for f in listdir(self.musicLoc) if isfile(join(self.musicLoc, f))]
-        for music in onlyfiles:
+        for i, music in enumerate(onlyfiles):
             musicClass = MusicClass.Song(self.musicLoc, music)
             self.musicList.append(musicClass)
             self.addSongToView(music)
@@ -115,7 +110,7 @@ class MainWindow(QMainWindow):
         # song view
         self.songView = QtWidgets.QListView(self.centralwidget)
         self.songView.setObjectName("songView")
-        self.songView.setStyleSheet("color: white;")
+        self.songView.setStyleSheet("color: rgb(230, 230, 230);")
         self.verticalLayout.addWidget(self.songView)
 
         # previous button
@@ -322,12 +317,29 @@ class MainWindow(QMainWindow):
         self.speakerImage.setText("")
         self.speakerImage.setPixmap(img)
 
-    # Prev song // plan is to either load songs into array of file locations
-    def prevSong(self):
-        print("play prev")
-
+    # These are basically the same
+    # check mediaCount in playlist if > 1 use playlist funcs
+    # if not move up current song index and play song at new index
     def nextSong(self):
-        print("play next")
+        if self.playlist.mediaCount() > 1:
+            self.playlist.next()
+        else:
+            self.playlist.clear()
+            self.currentSong += 1
+            if self.currentSong >= len(self.musicList):
+                self.currentSong = 0
+            self.playlist.addMedia(self.musicList[self.currentSong].returnMediaContent())
+        self.playSong()
+    def prevSong(self):
+        if self.playlist.mediaCount() > 1:
+            self.playlist.previous()
+        else:
+            self.playlist.clear()
+            self.currentSong -= 1
+            if self.currentSong < 0:
+                self.currentSong = len(self.musicList) - 1
+            self.playlist.addMedia(self.musicList[self.currentSong].returnMediaContent())
+        self.playSong()
 
     def playSongAtIndex(self, index):
         # get music list, get MusicClass at row clicked, return MediaContentClass of that index
@@ -336,7 +348,11 @@ class MainWindow(QMainWindow):
         pos = self.playlist.currentIndex()
         self.playlist.removeMedia(pos)
         self.playlist.insertMedia(pos, song)
+        #self.songView.change
         self.playSong()
+
+        # update current/last song pos for next and prev song funcs
+        self.currentSong = pos
 
 
     # checks song state and changes it
