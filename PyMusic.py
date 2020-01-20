@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
 import icons_rc
 from PyQt5.QtMultimedia import *
 from PyQt5.QtWidgets import QMainWindow
@@ -12,6 +13,7 @@ from os.path import isfile, join
 from os import *
 import sys
 from PyQt5.QtGui import QColor, QBrush
+import CustomSlider
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -38,7 +40,8 @@ class MainWindow(QMainWindow):
         self.changeSpeakerImg()
 
         self.model = QtGui.QStandardItemModel()
-        self.songView.setModel(self.model)
+        # do with tableview?
+        #self.songView.setModel(self.model)
 
 
         self.getMusicList()
@@ -61,15 +64,10 @@ class MainWindow(QMainWindow):
     def getPlaylist(self):
         self.playlist = QMediaPlaylist()
 
-    def addSongToView(self, songName):
-        songStandardItem = QtGui.QStandardItem(songName.split('.')[0])
-        songStandardItem.setEditable(False)
-        color = (QColor(20, 20, 20, 130), QColor(36, 36, 36, 130))[not len(self.musicList) % 2]
-        brush = QBrush()
-        brush.setColor(color)
-        brush.setStyle(1)
-        songStandardItem.setBackground(brush)
-        self.model.appendRow(songStandardItem)
+
+
+    def addSongToView(self, musicClass):
+        self.model.appendRow(musicClass.songStandardItem)
 
     # build out and allow for dirs I could use recursion to make this possible
     def getMusicList(self):
@@ -79,7 +77,14 @@ class MainWindow(QMainWindow):
         for i, music in enumerate(onlyfiles):
             musicClass = MusicClass.Song(self.musicLoc, music)
             self.musicList.append(musicClass)
-            self.addSongToView(music)
+            self.addSongToView(musicClass)
+
+            row = self.tableView.rowCount()
+            self.tableView.setRowCount(row + 1)
+            self.tableView.setItem(self.tableView.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(musicClass.artist))
+            self.tableView.setItem(self.tableView.rowCount() - 1, 2, QtWidgets.QTableWidgetItem(musicClass.songName))
+            min, sec = musicClass.duration
+            self.tableView.setItem(self.tableView.rowCount() - 1, 3, QtWidgets.QTableWidgetItem(str(min)+"."+str(sec)))
 
 
     def setupUi(self):
@@ -107,11 +112,38 @@ class MainWindow(QMainWindow):
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName("verticalLayout")
 
-        # song view
-        self.songView = QtWidgets.QListView(self.centralwidget)
-        self.songView.setObjectName("songView")
-        self.songView.setStyleSheet("color: rgb(230, 230, 230);")
-        self.verticalLayout.addWidget(self.songView)
+        #song widget
+        self.tableView = QtWidgets.QTableWidget(self.centralwidget)
+        self.tableView.setObjectName("songTable")
+        #self.tableView.setStyleSheet("color: rgb(230, 230, 230); alternate-background-color:rgb(36, 36, 36); background-color:rgb(28,28,28); border:none;")
+        self.tableView.setStyleSheet(
+            "color: rgb(230, 230, 230); alternate-background-color:rgb(36, 36, 36); background-color:rgb(28,28,28); border:none; selection-background-color: rgb(70,70,70); selection-color: white;")
+        self.verticalLayout.addWidget(self.tableView)
+        self.tableView.setAlternatingRowColors(True)
+        #hide row header
+        self.tableView.verticalHeader().hide()
+        # hide column header
+        self.tableView.horizontalHeader().hide()
+        # no grid
+        self.tableView.setShowGrid(False)
+        # no focus of item
+        self.tableView.setFocusPolicy(Qt.NoFocus)
+        # no focus of item
+        self.tableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+
+        # this should be coded for view or user customization
+        self.tableView.setColumnCount(4)
+        # not sure if this auto scales depending on how large the screen is
+        self.tableView.verticalHeader().setDefaultSectionSize(1)
+
+        self.tableView.setColumnWidth(0, 1)
+        self.tableView.setColumnWidth(1, 150)
+        self.tableView.setColumnWidth(2, 300)
+        self.tableView.setColumnWidth(3, 30)
+
+        self.tableView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+
 
         # previous button
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -138,11 +170,13 @@ class MainWindow(QMainWindow):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.play.sizePolicy().hasHeightForWidth())
         self.play.setSizePolicy(sizePolicy)
+        self.play.setMinimumSize(QtCore.QSize(40, 30))
         self.play.setStyleSheet("border: none;")
         self.play.setText("")
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/icons/Play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.play.setIcon(icon1)
+        self.play.setIconSize(QtCore.QSize(25, 24))
         self.play.setObjectName("play")
         self.horizontalLayout.addWidget(self.play)
 
@@ -162,7 +196,10 @@ class MainWindow(QMainWindow):
         self.horizontalLayout.addWidget(self.forward)
 
         # song progress slider
+        # CustomSlider.Slider
+        # QtWidgets.QSlider
         self.songSlider = QtWidgets.QSlider(self.centralwidget)
+        #self.songSlider = CustomSlider.Slider(self.centralwidget)
         self.songSlider.setStyleSheet(".QSlider {\n"
                                             "    min-height: 20px;\n"
                                             "    max-height: 20px;\n"
@@ -262,14 +299,22 @@ class MainWindow(QMainWindow):
         self.forward.clicked.connect(self.nextSong)
         self.audioSlider.valueChanged.connect(self.changeAudioVolume)
         self.songSlider.sliderMoved.connect(self.changeSongPosition)
+        #self.songSlider.releaseMouse.connect(self.changeSongPosition)
         #self.songSlider.valueChanged.connect(self.changeSongPosition)
         #self.player.positionChanged.connect(self.changeSliderPosition)
 
         self.fileMenuOpen.triggered.connect(self.getFile)
         self.changeDefaultFolder.triggered.connect(self.getDirectory)
-        self.songView.doubleClicked.connect(self.playSongAtIndex)
+
+        #self.tableView.cellClicked.connect(self.tableCellClicked)
+        self.tableView.doubleClicked.connect(self.playSongAtIndex)
 
 
+
+    def tableCellClicked(self, row, column):
+        self.tableView.clearSelection()
+        self.tableView.setRangeSelected(
+            QtWidgets.QTableWidgetSelectionRange(row, 0, row, self.tableView.columnCount() - 1), True)
     # File Thingies
     def getFile(self):
         # open dialog, check if user has file, move file to music Folder
@@ -343,12 +388,13 @@ class MainWindow(QMainWindow):
 
     def playSongAtIndex(self, index):
         # get music list, get MusicClass at row clicked, return MediaContentClass of that index
-        song = self.musicList[index.row()].returnMediaContent()
+        songClass = self.musicList[index.row()]
+        songClass.setIcon(1)
+        song = songClass.returnMediaContent()
         # remove song and add new song then play
         pos = self.playlist.currentIndex()
         self.playlist.removeMedia(pos)
         self.playlist.insertMedia(pos, song)
-        #self.songView.change
         self.playSong()
 
         # update current/last song pos for next and prev song funcs
