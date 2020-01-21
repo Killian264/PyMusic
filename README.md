@@ -5,14 +5,10 @@ Currently a work in progress, updates will come randomly depending on how much t
 
 # Some Todo
 
-Update QListView to QTableWidget for functionality.
-
 Fix slider updating issue and add click functionality.
 
 Add sidebar for folders.
 
 Add sidebar for music queue.
-
-Code cleanup and organization.
 
 Add playlist functionalities. 
