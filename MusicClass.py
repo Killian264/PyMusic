@@ -71,14 +71,6 @@ class Song():
         self.songStandardItem = QtGui.QStandardItem((self.songName + "\n-" + self.artist + "   " + str(min) + "." + str(sec)))
         self.songStandardItem.setEditable(False)
 
-    def setIcon(self, iconNum):
-        if iconNum > 2 or iconNum < -1:
-            iconNum = 0
-        # add a icon for 2 aka -1
-        iconsByState = [":/icons/speaker-none.png", ":/icons/speaker-max.png", ""]
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(iconsByState[iconNum]), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.songStandardItem.setIcon(icon)
 
 
 def splitDuration(duration):

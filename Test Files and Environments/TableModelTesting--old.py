@@ -62,7 +62,7 @@ myTableWidget.setShowGrid(False)
 myTableWidget.setFocusPolicy(Qt.NoFocus)
 myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 #myTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.set))
-myTableWidget.setStyleSheet("color: rgb(230, 230, 230); alternate-background-color:rgb(36, 36, 36); background-color:rgb(28,28,28); border:none; selection-background-color: rgb(70,70,70);} QHeaderView::section { background-color:rgb(36, 36, 36);")
+#myTableWidget.setStyleSheet("color: rgb(230, 230, 230); alternate-background-color:rgb(36, 36, 36); background-color:rgb(28,28,28); border:none; selection-background-color: rgb(70,70,70);} QHeaderView::section { background-color:rgb(36, 36, 36);")
 
 
 iconsByState = [":/icons/speaker-none.png", ":/icons/speaker-max.png", ""]

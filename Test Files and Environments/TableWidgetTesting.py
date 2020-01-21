@@ -104,7 +104,7 @@ layout.addWidget(myTableWidget)
 layout.addWidget(testTable)
 window.show()
 
-model.songs.append(["hi", "hi2", "hi3", "h3"])
+model.songs.append(["hi", "Cool artist dood", "Super duper long super string of song name thats long", "2.25"])
 model.layoutChanged.emit()
 
 sys.exit(app.exec_())

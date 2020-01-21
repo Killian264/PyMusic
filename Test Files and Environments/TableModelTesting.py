@@ -38,14 +38,13 @@ class TableView(QtCore.QAbstractTableModel):
         if role == Qt.TextAlignmentRole:
             # align right for length which is final column
             if index.column() == self.columnCount - 1:
-                return Qt.AlignRight
+                return Qt.AlignRight | Qt.AlignVCenter
 
     # set length to be right aligned
     def headerData(self, index, orientation, role):
         # orientation check shouldnt be nesiccary with vertical disabled but I will keep for now
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
             return self.headers[index]
-
 
 
 # boring init stuff
@@ -86,7 +85,8 @@ myTableWidget.setFocusPolicy(Qt.NoFocus)
 myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
 # fix this monstrosity
-myTableWidget.setStyleSheet("color: rgb(230, 230, 230); alternate-background-color:rgb(36, 36, 36); background-color:rgb(28,28,28); border:none; selection-background-color: rgb(70,70,70);} QHeaderView::section { background-color:rgb(36, 36, 36);")
+#myTableWidget.setStyleSheet("color: rgb(230, 230, 230); alternate-background-color:rgb(36, 36, 36); background-color:rgb(28,28,28); border:none; selection-background-color: rgb(70,70,70);} QHeaderView::section { background-color:rgb(36, 36, 36);")
+myTableWidget.setStyleSheet("color: rgb(230, 230, 230); alternate-background-color:rgb(36, 36, 36); background-color:rgb(28,28,28); border:none; selection-background-color: rgb(70,70,70);} QHeaderView::section { background-color:rgb(36, 36, 36); }")
 
 
 # very important
@@ -94,7 +94,7 @@ myTableWidget.setAlternatingRowColors(True)
 
 # this is how data is added, this could be overloaded to allow for easy transitions between column amounts with some witchcraft inside of the model
 # or not idk how that would look/be
-model.songs.append(["", "dude", "hi3", "h3"])
+model.songs.append(["", "Cool artist dood", "Super duper long super string of song name thats long", "2.25"])
 model.songs.append(["", "hi3", "h3", "cool"])
 model.songs.append(["", "hi3", "h3", "cool"])
 # do this when data is changed inside of the double data array
@@ -104,7 +104,7 @@ model.layoutChanged.emit()
 myTableWidget.setModel(model)
 
 # changes rows to fit column content
-myTableWidget.resizeRowsToContents()
+#myTableWidget.resizeRowsToContents()
 
 # row sizing is important for fixed headerview
 myTableWidget.setColumnWidth(0, 1)
@@ -119,5 +119,9 @@ header.setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
 #header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
 header.setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
+
+verticalHeader = myTableWidget.verticalHeader()
+
+verticalHeader.setDefaultSectionSize(1);
 
 sys.exit(app.exec_())

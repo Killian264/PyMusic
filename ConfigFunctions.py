@@ -25,9 +25,11 @@ def getSettings(configLoc=configLoc):
     volume = config["Volume"]
     musicLoc = config["MusicFolder"]
 
+    print(volume, musicLoc)
+
     if volume == '' or musicLoc == '':
-        volume = volume == '' if 10 else volume
-        musicLoc = musicLoc == '' if baseMusicLoc else musicLoc
+        volume = 10 if volume == '' else volume
+        musicLoc = baseMusicLoc if musicLoc == '' else musicLoc
 
         updateConfig(volume, musicLoc)
 
