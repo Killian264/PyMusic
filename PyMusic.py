@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
 
         self.getMusicList()
 
-# MORE INIT STUFF
+    # MORE INIT STUFF
     # gets settings and change object state this will probably be chagned later so its a function
     def getSettings(self):
         # configLoc does not need to be passed
@@ -86,7 +86,6 @@ class MainWindow(QMainWindow):
     def setCurrentSong(self, index):
         self.currentSong = index
         self.songTableModel.setCurrentSong(index)
-        print(self.currentSong)
 
 # CONNECTS
     # basically event listeners for changes
@@ -152,7 +151,6 @@ class MainWindow(QMainWindow):
     # check mediaCount in playlist if > 1 use playlist funcs
     # if not move up current song index and play song at new index
     def nextSong(self):
-        print(self.currentSong)
         if self.playlist.mediaCount() > 1:
             self.playlist.next()
         else:
@@ -216,9 +214,9 @@ class MainWindow(QMainWindow):
 
 # does stuff
 if __name__ == "__main__":
-        app = QtWidgets.QApplication(sys.argv)
-        win = MainWindow()
-        win.show()
-        sys.exit(app.exec_())
+    app = QtWidgets.QApplication(sys.argv)
+    win = MainWindow()
+    win.show()
+    sys.exit(app.exec_())
 
 

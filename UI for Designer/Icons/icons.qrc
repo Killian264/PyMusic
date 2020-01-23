@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>next.png</file>
+    <file>pause.png</file>
+    <file>play.png</file>
+    <file>previous.png</file>
+    <file>speaker-low.png</file>
+    <file>speaker-max.png</file>
+    <file>speaker-med.png</file>
+    <file>speaker-none.png</file>
+  </qresource>
+</RCC>
